@@ -26,9 +26,11 @@ func main() {
 	userUsecase := usecase.NewUserUsecase(userRepository)
 	userHandler := rest.NewUserHandler(userUsecase)
 
+	authMiddleware := rest.NewAuthMiddleware(userUsecase)
+
 	rest.LoadMiddleware(e)
-	rest.LoadRoutesMenu(e, menuHandler)
-	rest.LoadRoutesOrder(e, orderHandler)
+	rest.LoadRoutesMenu(e, menuHandler, authMiddleware)
+	rest.LoadRoutesOrder(e, orderHandler, authMiddleware)
 	rest.LoadRoutesUser(e, userHandler)
 
 	e.Logger.Fatal(e.Start(":8080"))

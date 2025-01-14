@@ -11,6 +11,7 @@ import (
 type UserUsecase interface {
 	RegisterUser(request model.RegisterRequest) (model.User, error)
 	LoginUser(request model.LoginRequest) (model.UserSession, error)
+	CheckSession(userSession model.UserSession) (string, error)
 }
 
 type userUsecase struct {
@@ -84,4 +85,13 @@ func (u *userUsecase) LoginUser(request model.LoginRequest) (model.UserSession, 
 	}
 
 	return createdSession, nil
+}
+
+func (u *userUsecase) CheckSession(userSession model.UserSession) (string, error) {
+	userID, err := u.repository.CheckSession(userSession)
+	if err != nil {
+		return "", err
+	}
+
+	return userID, nil
 }

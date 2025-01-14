@@ -16,6 +16,7 @@ func NewMenuHandler(menuUsecase usecase.MenuUsecase) *menuHandler {
 }
 
 func (h *menuHandler) GetMenu(c echo.Context) error {
+
 	menuType := c.FormValue("menu_type")
 
 	menu, err := h.menuUsecase.GetMenuByType(menuType)

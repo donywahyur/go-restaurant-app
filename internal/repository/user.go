@@ -24,6 +24,7 @@ type UserRepository interface {
 	CompareHash(password, passwordHash string) (bool, error)
 	GetUserData(username string) (model.User, error)
 	CreateUserSession(userID string) (model.UserSession, error)
+	CheckSession(userSession model.UserSession) (string, error)
 }
 
 type userRepository struct {
@@ -150,4 +151,26 @@ func (r *userRepository) CreateUserSession(userID string) (model.UserSession, er
 	userSession.JWTToken = signedToken
 
 	return userSession, nil
+}
+
+func (r *userRepository) CheckSession(userSession model.UserSession) (string, error) {
+	accessToken, err := jwt.ParseWithClaims(userSession.JWTToken, &model.MyClaims{}, func(token *jwt.Token) (interface{}, error) {
+		method, ok := token.Method.(*jwt.SigningMethodHMAC)
+		if !ok || method != constant.JWT_SIGNING_METHOD {
+			return nil, errors.New("signing method invalid")
+		}
+
+		return constant.JWT_SIGNATURE_KEY, nil
+	})
+
+	if err != nil {
+		return "", err
+	}
+
+	accessTokenClaim, ok := accessToken.Claims.(*model.MyClaims)
+	if !ok || !accessToken.Valid {
+		return "", errors.New("unauthorized")
+	}
+
+	return accessTokenClaim.Subject, nil
 }

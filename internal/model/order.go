@@ -4,6 +4,7 @@ type OrderStatus string
 
 type Order struct {
 	ID            string         `gorm:"primaryKey" json:"id"`
+	UserID        string         `json:"user_id"`
 	Status        OrderStatus    `json:"status"`
 	ProductOrders []ProductOrder `json:"product_order"`
 	ReferenceID   string         `gorm:"unique" json:"reference_id"`

@@ -22,6 +22,9 @@ func (h *orderHandler) Order(c echo.Context) error {
 	var request model.OrderMenuRequest
 	err := json.NewDecoder(c.Request().Body).Decode(&request)
 	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"err": err,
+		}).Error("[delivery][rest][order_handler][Order] json value error")
 		c.JSON(http.StatusInternalServerError, map[string]interface{}{
 			"error": err.Error(),
 		})
@@ -29,6 +32,9 @@ func (h *orderHandler) Order(c echo.Context) error {
 
 	orderData, err := h.orderUsecase.Order(request)
 	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"err": err,
+		}).Error("[delivery][rest][order_handler][Order] unable to get order data")
 		c.JSON(http.StatusInternalServerError, map[string]interface{}{
 			"error": err.Error(),
 		})

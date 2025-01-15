@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"github.com/sirupsen/logrus"
 )
 
 type orderHandler struct {
@@ -47,6 +48,10 @@ func (h *orderHandler) GetOrderInfo(c echo.Context) error {
 
 	orderFound, err := h.orderUsecase.GetOrderInfo(request)
 	if err != nil {
+		logrus.WithFields(logrus.Fields{
+			"err": err,
+		}).Error("[delivery][rest][order_handler][GetOrderInfo] unable to get order data")
+
 		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
 			"error": err.Error(),
 		})

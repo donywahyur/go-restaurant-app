@@ -3,6 +3,7 @@ package main
 import (
 	"go-restaurant-app/internal/database"
 	"go-restaurant-app/internal/delivery/rest"
+	"go-restaurant-app/internal/logger"
 	"go-restaurant-app/internal/repository"
 	"go-restaurant-app/internal/usecase"
 
@@ -10,6 +11,8 @@ import (
 )
 
 func main() {
+	logger.Init()
+
 	e := echo.New()
 
 	db := database.GetDB()

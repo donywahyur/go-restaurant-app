@@ -1,6 +1,8 @@
 package database
 
 import (
+	"gorm.io/plugin/opentelemetry/tracing"
+
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -11,6 +13,12 @@ func GetDB() *gorm.DB {
 	if err != nil {
 		panic(err)
 	}
+
+	err = db.Use(tracing.NewPlugin())
+	if err != nil {
+		panic(err)
+	}
+
 	dbSeed(db)
 	return db
 }

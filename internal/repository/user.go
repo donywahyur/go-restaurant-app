@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/subtle"
 	"encoding/base64"
@@ -8,6 +9,7 @@ import (
 	"fmt"
 	"go-restaurant-app/internal/model"
 	"go-restaurant-app/internal/model/constant"
+	tracing "go-restaurant-app/internal/tracing"
 	"strings"
 	"time"
 
@@ -18,13 +20,13 @@ import (
 )
 
 type UserRepository interface {
-	RegisterUser(user model.User) (model.User, error)
-	CheckRegistered(username string) (bool, error)
-	GenerateUserHash(password string) (string, error)
-	CompareHash(password, passwordHash string) (bool, error)
-	GetUserData(username string) (model.User, error)
-	CreateUserSession(userID string) (model.UserSession, error)
-	CheckSession(userSession model.UserSession) (string, error)
+	RegisterUser(ctx context.Context, user model.User) (model.User, error)
+	CheckRegistered(ctx context.Context, username string) (bool, error)
+	GenerateUserHash(ctx context.Context, password string) (string, error)
+	CompareHash(ctx context.Context, password, passwordHash string) (bool, error)
+	GetUserData(ctx context.Context, username string) (model.User, error)
+	CreateUserSession(ctx context.Context, userID string) (model.UserSession, error)
+	CheckSession(ctx context.Context, userSession model.UserSession) (string, error)
 }
 
 type userRepository struct {
@@ -44,8 +46,11 @@ func NewUserRepository(db *gorm.DB,
 	return &userRepository{db, time, memory, parallelism, keyLen}
 }
 
-func (r *userRepository) RegisterUser(user model.User) (model.User, error) {
-	err := r.db.Create(&user).Error
+func (r *userRepository) RegisterUser(ctx context.Context, user model.User) (model.User, error) {
+	ctx, span := tracing.CreateSpan(ctx, "RegisterUser")
+	defer span.End()
+
+	err := r.db.WithContext(ctx).Create(&user).Error
 	if err != nil {
 		return user, err
 	}
@@ -53,10 +58,14 @@ func (r *userRepository) RegisterUser(user model.User) (model.User, error) {
 	return user, nil
 }
 
-func (r *userRepository) CheckRegistered(username string) (bool, error) {
+func (r *userRepository) CheckRegistered(ctx context.Context, username string) (bool, error) {
+
+	ctx, span := tracing.CreateSpan(ctx, "CheckRegistered")
+	defer span.End()
+
 	var user model.User
 
-	err := r.db.Where("username = ? ", username).First(&user).Error
+	err := r.db.WithContext(ctx).Where("username = ? ", username).First(&user).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return false, nil
@@ -68,7 +77,11 @@ func (r *userRepository) CheckRegistered(username string) (bool, error) {
 	return user.ID != "", nil
 }
 
-func (r *userRepository) GenerateUserHash(password string) (string, error) {
+func (r *userRepository) GenerateUserHash(ctx context.Context, password string) (string, error) {
+
+	_, span := tracing.CreateSpan(ctx, "GenerateUserHash")
+	defer span.End()
+
 	salt := make([]byte, 16)
 	_, err := rand.Read(salt)
 	if err != nil {
@@ -85,10 +98,13 @@ func (r *userRepository) GenerateUserHash(password string) (string, error) {
 	return encodedHash, nil
 }
 
-func (r *userRepository) GetUserData(username string) (model.User, error) {
+func (r *userRepository) GetUserData(ctx context.Context, username string) (model.User, error) {
+	ctx, span := tracing.CreateSpan(ctx, "GetUserData")
+	defer span.End()
+
 	var user model.User
 
-	err := r.db.Where("username = ?", username).First(&user).Error
+	err := r.db.WithContext(ctx).Where("username = ?", username).First(&user).Error
 	if err != nil {
 		return user, err
 	}
@@ -96,7 +112,11 @@ func (r *userRepository) GetUserData(username string) (model.User, error) {
 	return user, nil
 }
 
-func (r *userRepository) CompareHash(password, hashPassword string) (bool, error) {
+func (r *userRepository) CompareHash(ctx context.Context, password, hashPassword string) (bool, error) {
+
+	_, span := tracing.CreateSpan(ctx, "CompareHash")
+	defer span.End()
+
 	vals := strings.Split(hashPassword, "$")
 	if len(vals) != 6 {
 		return false, errors.New("invalid hash")
@@ -127,7 +147,11 @@ func (r *userRepository) CompareHash(password, hashPassword string) (bool, error
 	return subtle.ConstantTimeCompare(comparisonHash, decryptedHash) == 1, nil
 }
 
-func (r *userRepository) CreateUserSession(userID string) (model.UserSession, error) {
+func (r *userRepository) CreateUserSession(ctx context.Context, userID string) (model.UserSession, error) {
+
+	_, span := tracing.CreateSpan(ctx, "CreateUserSession")
+	defer span.End()
+
 	var userSession model.UserSession
 
 	accessClaim := model.MyClaims{
@@ -153,7 +177,11 @@ func (r *userRepository) CreateUserSession(userID string) (model.UserSession, er
 	return userSession, nil
 }
 
-func (r *userRepository) CheckSession(userSession model.UserSession) (string, error) {
+func (r *userRepository) CheckSession(ctx context.Context, userSession model.UserSession) (string, error) {
+
+	_, span := tracing.CreateSpan(ctx, "CheckSession")
+	defer span.End()
+
 	accessToken, err := jwt.ParseWithClaims(userSession.JWTToken, &model.MyClaims{}, func(token *jwt.Token) (interface{}, error) {
 		method, ok := token.Method.(*jwt.SigningMethodHMAC)
 		if !ok || method != constant.JWT_SIGNING_METHOD {

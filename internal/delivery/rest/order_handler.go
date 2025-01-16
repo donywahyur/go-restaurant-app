@@ -3,6 +3,7 @@ package rest
 import (
 	"encoding/json"
 	"go-restaurant-app/internal/model"
+	tracing "go-restaurant-app/internal/tracing"
 	"go-restaurant-app/internal/usecase"
 	"net/http"
 
@@ -19,6 +20,9 @@ func NewOrderHandler(orderUsecase usecase.OrderUsecase) *orderHandler {
 }
 
 func (h *orderHandler) Order(c echo.Context) error {
+	ctx, span := tracing.CreateSpan(c.Request().Context(), "Order")
+	defer span.End()
+
 	var request model.OrderMenuRequest
 	err := json.NewDecoder(c.Request().Body).Decode(&request)
 	if err != nil {
@@ -30,7 +34,7 @@ func (h *orderHandler) Order(c echo.Context) error {
 		})
 	}
 
-	orderData, err := h.orderUsecase.Order(request)
+	orderData, err := h.orderUsecase.Order(ctx, request)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
 			"err": err,
@@ -46,13 +50,16 @@ func (h *orderHandler) Order(c echo.Context) error {
 }
 
 func (h *orderHandler) GetOrderInfo(c echo.Context) error {
+	ctx, span := tracing.CreateSpan(c.Request().Context(), "GetOrderInfo")
+	defer span.End()
+
 	var request model.GetOrderInfoRequest
 
 	orderID := c.Param("orderID")
 
 	request.OrderID = orderID
 
-	orderFound, err := h.orderUsecase.GetOrderInfo(request)
+	orderFound, err := h.orderUsecase.GetOrderInfo(ctx, request)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{
 			"err": err,

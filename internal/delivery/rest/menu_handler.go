@@ -1,6 +1,7 @@
 package rest
 
 import (
+	tracing "go-restaurant-app/internal/tracing"
 	"go-restaurant-app/internal/usecase"
 	"net/http"
 
@@ -16,10 +17,12 @@ func NewMenuHandler(menuUsecase usecase.MenuUsecase) *menuHandler {
 }
 
 func (h *menuHandler) GetMenu(c echo.Context) error {
+	ctx, span := tracing.CreateSpan(c.Request().Context(), "GetMenu")
+	defer span.End()
 
 	menuType := c.FormValue("menu_type")
 
-	menu, err := h.menuUsecase.GetMenuByType(menuType)
+	menu, err := h.menuUsecase.GetMenuByType(ctx, menuType)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]interface{}{
 			"error": err.Error(),

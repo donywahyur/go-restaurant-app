@@ -5,6 +5,7 @@ import (
 	"errors"
 	"go-restaurant-app/internal/model"
 	"go-restaurant-app/internal/model/constant"
+	tracing "go-restaurant-app/internal/tracing"
 	"go-restaurant-app/internal/usecase"
 	"net/http"
 	"strings"
@@ -28,6 +29,9 @@ func NewAuthMiddleware(userUsecase usecase.UserUsecase) *authMiddleware {
 }
 func (am *authMiddleware) CheckAuth(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
+		ctx, span := tracing.CreateSpan(c.Request().Context(), "CheckSession")
+		defer span.End()
+
 		sessionData, err := getSessionData(c.Request())
 		if err != nil {
 			return &echo.HTTPError{
@@ -36,7 +40,7 @@ func (am *authMiddleware) CheckAuth(next echo.HandlerFunc) echo.HandlerFunc {
 				Internal: err,
 			}
 		}
-		userID, err := am.userUsecase.CheckSession(sessionData)
+		userID, err := am.userUsecase.CheckSession(ctx, sessionData)
 		if err != nil {
 			return &echo.HTTPError{
 				Code:     http.StatusUnauthorized,

@@ -5,6 +5,7 @@ import (
 	"go-restaurant-app/internal/delivery/rest"
 	"go-restaurant-app/internal/logger"
 	"go-restaurant-app/internal/repository"
+	"go-restaurant-app/internal/tracing"
 	"go-restaurant-app/internal/usecase"
 
 	"github.com/labstack/echo/v4"
@@ -12,6 +13,7 @@ import (
 
 func main() {
 	logger.Init()
+	tracing.Init("http://localhost:14268/api/traces")
 
 	e := echo.New()
 
@@ -36,6 +38,6 @@ func main() {
 	rest.LoadRoutesOrder(e, orderHandler, authMiddleware)
 	rest.LoadRoutesUser(e, userHandler)
 
-	e.Logger.Fatal(e.Start(":8080"))
+	e.Logger.Fatal(e.Start(":1432"))
 
 }

@@ -25,6 +25,7 @@ type UserRepository interface {
 	GenerateUserHash(ctx context.Context, password string) (string, error)
 	CompareHash(ctx context.Context, password, passwordHash string) (bool, error)
 	GetUserData(ctx context.Context, username string) (model.User, error)
+	GetUserDataByID(ctx context.Context, username string) (model.User, error)
 	CreateUserSession(ctx context.Context, userID string) (model.UserSession, error)
 	CheckSession(ctx context.Context, userSession model.UserSession) (string, error)
 }
@@ -105,6 +106,20 @@ func (r *userRepository) GetUserData(ctx context.Context, username string) (mode
 	var user model.User
 
 	err := r.db.WithContext(ctx).Where("username = ?", username).First(&user).Error
+	if err != nil {
+		return user, err
+	}
+
+	return user, nil
+}
+
+func (r *userRepository) GetUserDataByID(ctx context.Context, userID string) (model.User, error) {
+	ctx, span := tracing.CreateSpan(ctx, "GetUserData")
+	defer span.End()
+
+	var user model.User
+
+	err := r.db.WithContext(ctx).Where("id = ?", userID).First(&user).Error
 	if err != nil {
 		return user, err
 	}

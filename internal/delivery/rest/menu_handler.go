@@ -21,7 +21,6 @@ func (h *menuHandler) GetMenu(c echo.Context) error {
 	defer span.End()
 
 	menuType := c.FormValue("menu_type")
-
 	menu, err := h.menuUsecase.GetMenuByType(ctx, menuType)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]interface{}{

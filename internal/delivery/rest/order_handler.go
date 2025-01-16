@@ -3,6 +3,7 @@ package rest
 import (
 	"encoding/json"
 	"go-restaurant-app/internal/model"
+	"go-restaurant-app/internal/model/constant"
 	tracing "go-restaurant-app/internal/tracing"
 	"go-restaurant-app/internal/usecase"
 	"net/http"
@@ -33,6 +34,9 @@ func (h *orderHandler) Order(c echo.Context) error {
 			"error": err.Error(),
 		})
 	}
+
+	userID := c.Request().Context().Value(constant.AuthContextKey)
+	request.UserID = userID.(string)
 
 	orderData, err := h.orderUsecase.Order(ctx, request)
 	if err != nil {

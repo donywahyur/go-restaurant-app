@@ -104,5 +104,14 @@ func (u *userUsecase) CheckSession(ctx context.Context, userSession model.UserSe
 		return "", err
 	}
 
+	userData, err := u.repository.GetUserDataByID(ctx, userID)
+	if err != nil {
+		return "", err
+	}
+
+	if userData.ID == "" {
+		return "", errors.New("user not found")
+	}
+
 	return userID, nil
 }

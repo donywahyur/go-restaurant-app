@@ -28,7 +28,8 @@ type OrderMenuProductRequest struct {
 
 type OrderMenuRequest struct {
 	OrderProducts []OrderMenuProductRequest `json:"order_products"`
-	ReferenceID   string                    `gorm:"unique" json:"reference_id"`
+	UserID        string
+	ReferenceID   string `gorm:"unique" json:"reference_id"`
 }
 
 type GetOrderInfoRequest struct {

@@ -12,11 +12,16 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/gommon/log"
 )
 
 func LoadMiddleware(e *echo.Echo) {
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{"*"},
+	}))
+
+	e.Use(middleware.RecoverWithConfig(middleware.RecoverConfig{
+		LogLevel: log.ERROR,
 	}))
 }
 

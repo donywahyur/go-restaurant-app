@@ -47,6 +47,7 @@ func (u *orderUsecase) Order(ctx context.Context, request model.OrderMenuRequest
 	}
 
 	order.ID = uuid.NewString()
+	order.UserID = request.UserID
 	order.ProductOrders = productOrder
 	order.Status = constant.OrderStatusProcessed
 	order.ReferenceID = request.ReferenceID
